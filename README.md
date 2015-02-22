@@ -10,6 +10,8 @@ An implementation of Weighted Voronoi Stippling:
 http://mrl.nyu.edu/~ajsecord/stipples.html
 
 
+
 Full Documentation: http://wiki.evilmadscience.com/StippleGen
+
 Blog post about the release: http://www.evilmadscientist.com/go/stipple2
  
