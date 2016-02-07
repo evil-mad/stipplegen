@@ -1,8 +1,8 @@
 
- StippleGen_2_31
+ StippleGen_2_40
  
- SVG Stipple Generator, v. 2.31
- Copyright (C) 2013 by Windell H. Oskay, www.evilmadscientist.com
+ SVG Stipple Generator, v. 2.4.0
+ Copyright (C) 2016 by Windell H. Oskay, www.evilmadscientist.com
  
  Full Documentation: http://wiki.evilmadscientist.com/StippleGen
  Blog post about the release: http://www.evilmadscientist.com/go/stipple2
@@ -15,6 +15,8 @@
  
  Change Log:
  
+ v 2.4
+ * Processing 3.0.1
  
  v 2.3
  * Forked from 2.1.1

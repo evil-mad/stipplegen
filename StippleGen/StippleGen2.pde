@@ -1,9 +1,9 @@
 /**
  
- StippleGen_2_31
+ StippleGen_2_40
  
- SVG Stipple Generator, v. 2.31
- Copyright (C) 2013 by Windell H. Oskay, www.evilmadscientist.com
+ SVG Stipple Generator, v. 2.40
+ Copyright (C) 2016 by Windell H. Oskay, www.evilmadscientist.com
  
  Full Documentation: http://wiki.evilmadscience.com/StippleGen
  Blog post about the release: http://www.evilmadscientist.com/go/stipple2
@@ -16,6 +16,8 @@
  
  Change Log:
  
+ v 2.4
+ * Compiling in Processing 3.0.1
  
  v 2.3
  * Forked from 2.1.1
@@ -325,8 +327,11 @@ void setup()
   ctrlheight = 110;
 
 //  size(mainwidth, mainheight + ctrlheight, JAVA2D);
+// xWidth: 800
+// yWidth: 600 + 110 = 710
 
-  size(mainwidth, mainheight + ctrlheight, JAVA2D);
+
+  size(800, 710);
 
 
   gfx = new ToxiclibsSupport(this);
@@ -377,25 +382,25 @@ void setup()
   cp5.addButton("QUIT", 10, 205, GUIFudge + 3*GuiRowSpacing, 30, 10);
 
   cp5.addButton("SAVE_STIPPLES", 10, 25, GUIFudge + 4*GuiRowSpacing, 160, 10);
-  cp5.controller("SAVE_STIPPLES").setCaptionLabel("Save Stipple File (.SVG format)");
+  cp5.getController("SAVE_STIPPLES").setCaptionLabel("Save Stipple File (.SVG format)");
 
   cp5.addButton("SAVE_PATH", 10, 25, GUIFudge + 5*GuiRowSpacing, 160, 10); 
-  cp5.controller("SAVE_PATH").setCaptionLabel("Save \"TSP\" Path (.SVG format)");
+  cp5.getController("SAVE_PATH").setCaptionLabel("Save \"TSP\" Path (.SVG format)");
 
 
   ControlGroup l5 = cp5.addGroup("Display Options - Updated on next generation", leftcolumwidth+50, GUItop, 225);
 
   cp5.addSlider("Min_Dot_Size", .5, 8, 2, 10, 4, 140, 10).setGroup(l5); 
-  cp5.controller("Min_Dot_Size").setValue(MinDotSize);
-  cp5.controller("Min_Dot_Size").setCaptionLabel("Min. Dot Size");
+  cp5.getController("Min_Dot_Size").setValue(MinDotSize);
+  cp5.getController("Min_Dot_Size").setCaptionLabel("Min. Dot Size");
 
   cp5.addSlider("Dot_Size_Range", 0, 20, 5, 10, 18, 140, 10).setGroup(l5);  
-  cp5.controller("Dot_Size_Range").setValue(DotSizeFactor); 
-  cp5.controller("Dot_Size_Range").setCaptionLabel("Dot Size Range");
+  cp5.getController("Dot_Size_Range").setValue(DotSizeFactor); 
+  cp5.getController("Dot_Size_Range").setCaptionLabel("Dot Size Range");
 
   cp5.addSlider("White_Cutoff", 0, 1, 0, 10, 32, 140, 10).setGroup(l5); 
-  cp5.controller("White_Cutoff").setValue(cutoff);
-  cp5.controller("White_Cutoff").setCaptionLabel("White Cutoff");
+  cp5.getController("White_Cutoff").setValue(cutoff);
+  cp5.getController("White_Cutoff").setCaptionLabel("White Cutoff");
 
 
   ImgOnOff = cp5.addButton("IMG_ON_OFF", 10, 10, 46, 90, 10);
@@ -614,12 +619,12 @@ void INVERT_IMG(float theValue) {
   if (invertImg) {
     invertImg  = false;
     InvertOnOff.setCaptionLabel("Black stipples, White Background");
-    cp5.controller("White_Cutoff").setCaptionLabel("White Cutoff");
+    cp5.getController("White_Cutoff").setCaptionLabel("White Cutoff");
   }
   else {
     invertImg  = true;
     InvertOnOff.setCaptionLabel("White stipples, Black Background");
-    cp5.controller("White_Cutoff").setCaptionLabel("Black Cutoff");
+    cp5.getController("White_Cutoff").setCaptionLabel("Black Cutoff");
   }
 
   ReInitiallizeArray = true;
@@ -1123,7 +1128,7 @@ void draw()
   float cutoffScaled = 1 - cutoff;
 
   if (ReInitiallizeArray) {
-    maxParticles = (int) cp5.controller("Stipples").value(); // Only change this here!
+    maxParticles = (int) cp5.getController("Stipples").getValue(); // Only change this here!
 
     MainArraysetup();
     ReInitiallizeArray = false;
@@ -1285,7 +1290,7 @@ void draw()
 
   fill(255);   // Text color
 
-  text("StippleGen 2      (v. 2.1.0)", TextColumnStart, mainheight + 15);
+  text("StippleGen 2      (v. 2.4.0)", TextColumnStart, mainheight + 15);
   text("by Evil Mad Scientist Laboratories", TextColumnStart, mainheight + 30);
   text("www.evilmadscientist.com/go/stipple2", TextColumnStart, mainheight + 50);
 
@@ -1405,7 +1410,6 @@ void keyPressed() {
   if (key == 'x')
   {   // If this program doesn't run slowly enough for you, 
     // simply press the 'x' key on your keyboard. :)
-    cp5.controller("Stipples").setMax(50000.0);
+    cp5.getController("Stipples").setMax(50000.0);
   }
 }
-
