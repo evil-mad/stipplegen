@@ -1,7 +1,7 @@
 # StippleGen
 Software that can create stipple drawings and “TSP art,” from image files
 
-Copyright (C) 2015 by Windell H. Oskay, www.evilmadscientist.com
+Copyright (C) 2016 by Windell H. Oskay, www.evilmadscientist.com
  
 ![Snap! Screenshot](https://raw.github.com/evil-mad/stipplegen/master/examples/screenshots/7368233514_59f7d25603.jpg)
  

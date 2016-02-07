@@ -18,6 +18,7 @@
  
  v 2.4
  * Compiling in Processing 3.0.1
+ * Add GUI option to fill circles with a spiral
  
  v 2.3
  * Forked from 2.1.1
@@ -148,6 +149,7 @@ int SaveNow;
 String savePath;
 String[] FileOutput; 
 
+boolean drawSpiral;
 
 
 
@@ -185,7 +187,7 @@ int cellsTotal, cellsCalculated, cellsCalculatedLast;
 
 // ControlP5 GUI library variables setup
 Textlabel  ProgName; 
-Button  OrderOnOff, ImgOnOff, CellOnOff, InvertOnOff, PauseButton;
+Button  OrderOnOff, ImgOnOff, CellOnOff, InvertOnOff, FillCircles, PauseButton;
 ControlP5 cp5; 
 
 
@@ -209,8 +211,7 @@ void LoadImageAndScale() {
   if (invertImg)
     for (int i = 0; i < img.pixels.length; i++) {
       img.pixels[i] = color(0);
-    }
-  else
+    } else
     for (int i = 0; i < img.pixels.length; i++) {
       img.pixels[i] = color(255);
     }
@@ -229,8 +230,7 @@ void LoadImageAndScale() {
     if (((float) imgload.width / (float)imgload.height) > ((float) mainwidth / (float) mainheight))
     { 
       imgload.resize(mainwidth, 0);
-    }
-    else
+    } else
     { 
       imgload.resize(0, mainheight);
     }
@@ -320,15 +320,17 @@ void MainArraysetup() {
 void setup()
 {
 
+  drawSpiral = true;
+
   borderWidth = 6;
 
   mainwidth = 800;
   mainheight = 600;
   ctrlheight = 110;
 
-//  size(mainwidth, mainheight + ctrlheight, JAVA2D);
-// xWidth: 800
-// yWidth: 600 + 110 = 710
+  //  size(mainwidth, mainheight + ctrlheight, JAVA2D);
+  // xWidth: 800
+  // yWidth: 600 + 110 = 710
 
 
   size(800, 710);
@@ -349,7 +351,7 @@ void setup()
 
   MainArraysetup();   // Main particle array setup
 
-    frameRate(24);
+  frameRate(24);
 
   smooth();
   noStroke();
@@ -366,7 +368,7 @@ void setup()
   int GUI2ndRow = 4;   // Spacing for firt row after group heading
   int GuiRowSpacing = 14;  // Spacing for subsequent rows
   int GUIFudge = mainheight + 19;  // I wish that we didn't need ONE MORE of these stupid spacings.
-
+  int loadButtonHeight;
 
   ControlGroup l3 = cp5.addGroup("Primary controls (Changing will restart)", 10, GUItop, 225);
 
@@ -376,16 +378,21 @@ void setup()
   InvertOnOff.setCaptionLabel("Black stipples, White Background");
 
 
-  Button LoadButton = cp5.addButton("LOAD_FILE", 10, 10, GUIFudge + 3*GuiRowSpacing, 175, 10);
+  loadButtonHeight = GUIFudge + int(round(2.25*GuiRowSpacing));
+
+  Button LoadButton = cp5.addButton("LOAD_FILE", 10, 10, loadButtonHeight, 175, 10);
   LoadButton.setCaptionLabel("LOAD IMAGE FILE (.PNG, .JPG, or .GIF)");
 
-  cp5.addButton("QUIT", 10, 205, GUIFudge + 3*GuiRowSpacing, 30, 10);
+  cp5.addButton("QUIT", 10, 205, loadButtonHeight, 30, 10);
 
-  cp5.addButton("SAVE_STIPPLES", 10, 25, GUIFudge + 4*GuiRowSpacing, 160, 10);
+  cp5.addButton("SAVE_STIPPLES", 10, 25, loadButtonHeight + GuiRowSpacing, 160, 10);
   cp5.getController("SAVE_STIPPLES").setCaptionLabel("Save Stipple File (.SVG format)");
 
-  cp5.addButton("SAVE_PATH", 10, 25, GUIFudge + 5*GuiRowSpacing, 160, 10); 
+  cp5.addButton("SAVE_PATH", 10, 25, loadButtonHeight + 2*GuiRowSpacing, 160, 10); 
   cp5.getController("SAVE_PATH").setCaptionLabel("Save \"TSP\" Path (.SVG format)");
+
+  FillCircles = cp5.addButton("FILL_CIRCLES", 10, 10, loadButtonHeight + 3*GuiRowSpacing, 190, 10); 
+  FillCircles.setCaptionLabel("Generate Filled circles in output");
 
 
   ControlGroup l5 = cp5.addGroup("Display Options - Updated on next generation", leftcolumwidth+50, GUItop, 225);
@@ -446,8 +453,7 @@ void setup()
 void fileSelected(File selection) {
   if (selection == null) {
     println("Window was closed or the user hit cancel.");
-  } 
-  else {
+  } else {
     //println("User selected " + selection.getAbsolutePath());
 
     String loadPath = selection.getAbsolutePath();
@@ -483,8 +489,7 @@ void fileSelected(File selection) {
       fileLoaded = true;
       // MainArraysetup();
       ReInitiallizeArray = true;
-    }
-    else {
+    } else {
       // Can't load file
       ErrorDisplay = "ERROR: BAD FILE TYPE";
       ErrorTime = millis();
@@ -525,31 +530,30 @@ void SavefileSelected(File selection) {
     ErrorDisplay = "ERROR: NO FILE NAME CHOSEN.";
     ErrorTime = millis();
     ErrorDisp = true;
-  } 
-  else { 
-     
+  } else { 
+
     savePath = selection.getAbsolutePath();
-      String[] p = splitTokens(savePath, ".");
-      boolean fileOK = false;
+    String[] p = splitTokens(savePath, ".");
+    boolean fileOK = false;
 
-      if ( p[p.length - 1].equals("SVG"))
-        fileOK = true;
-      if ( p[p.length - 1].equals("svg"))
-        fileOK = true;      
+    if ( p[p.length - 1].equals("SVG"))
+      fileOK = true;
+    if ( p[p.length - 1].equals("svg"))
+      fileOK = true;      
 
-      if (fileOK == false)
-        savePath = savePath + ".svg";
+    if (fileOK == false)
+      savePath = savePath + ".svg";
 
 
-      // If a file was selected, print path to folder 
-      println("Save file: " + savePath);
-      SaveNow = 1; 
-      showPath  = true;
+    // If a file was selected, print path to folder 
+    println("Save file: " + savePath);
+    SaveNow = 1; 
+    showPath  = true;
 
-      ErrorDisplay = "SAVING FILE...";
-      ErrorTime = millis();
-      ErrorDisp = true;
-    }
+    ErrorDisplay = "SAVING FILE...";
+    ErrorTime = millis();
+    ErrorDisp = true;
+  }
 }
 
 
@@ -562,12 +566,9 @@ void SAVE_SVG(float theValue) {
     ErrorDisplay = "Error: PAUSE before saving.";
     ErrorTime = millis();
     ErrorDisp = true;
-  }
-  else {
+  } else {
 
     selectOutput("Output .svg file name:", "SavefileSelected");
-
-
   }
 }
 
@@ -583,8 +584,7 @@ void ORDER_ON_OFF(float theValue) {
   if (showPath) {
     showPath  = false;
     OrderOnOff.setCaptionLabel("Plotting path >> Hide");
-  }
-  else {
+  } else {
     showPath  = true;
     OrderOnOff.setCaptionLabel("Plotting path >> Shown while paused");
   }
@@ -594,8 +594,7 @@ void CELLS_ON_OFF(float theValue) {
   if (showCells) {
     showCells  = false;
     CellOnOff.setCaptionLabel("Cells >> Hide");
-  }
-  else {
+  } else {
     showCells  = true;
     CellOnOff.setCaptionLabel("Cells >> Show");
   }
@@ -607,8 +606,7 @@ void IMG_ON_OFF(float theValue) {
   if (showBG) {
     showBG  = false;
     ImgOnOff.setCaptionLabel("Image BG >> Hide");
-  }
-  else {
+  } else {
     showBG  = true;
     ImgOnOff.setCaptionLabel("Image BG >> Show");
   }
@@ -620,8 +618,7 @@ void INVERT_IMG(float theValue) {
     invertImg  = false;
     InvertOnOff.setCaptionLabel("Black stipples, White Background");
     cp5.getController("White_Cutoff").setCaptionLabel("White Cutoff");
-  }
-  else {
+  } else {
     invertImg  = true;
     InvertOnOff.setCaptionLabel("White stipples, Black Background");
     cp5.getController("White_Cutoff").setCaptionLabel("Black Cutoff");
@@ -633,6 +630,16 @@ void INVERT_IMG(float theValue) {
 
 
 
+void FILL_CIRCLES(float theValue) {  
+  if (drawSpiral) {
+    drawSpiral  = false;
+    FillCircles.setCaptionLabel("Generate Open circles in output");
+  } else {
+    drawSpiral  = true;
+    FillCircles.setCaptionLabel("Generate Filled circles in output");
+  }
+} 
+
 
 void Pause(float theValue) { 
   // Main particle array setup (to be repeated if necessary):
@@ -642,8 +649,7 @@ void Pause(float theValue) {
     pausemode = false;
     println("Resuming.");
     PauseButton.setCaptionLabel("Pause (to calculate TSP path)");
-  }
-  else
+  } else
   {
     pausemode = true;
     println("Paused. Press PAUSE again to resume.");
@@ -658,8 +664,7 @@ boolean overRect(int x, int y, int width, int height)
   if (mouseX >= x && mouseX <= x+width && 
     mouseY >= y && mouseY <= y+height) {
     return true;
-  } 
-  else {
+  } else {
     return false;
   }
 }
@@ -820,8 +825,7 @@ void OptimizePlotPath()
         println("Now optimizing plot path" );
       }
     }
-  }
-  else
+  } else
   {     // Initial routing is complete
     // 2-opt heuristic optimization:
     // Identify a pair of edges that would become shorter by reversing part of the tour.
@@ -917,7 +921,7 @@ void doPhysics()
     if (temp > maxParticles) 
       temp = maxParticles; 
 
-//    for (int i = vorPointsAdded; i < temp; ++i) {  
+    //    for (int i = vorPointsAdded; i < temp; ++i) {  
     for (int i = vorPointsAdded; i < temp; i++) {  
 
 
@@ -946,18 +950,17 @@ void doPhysics()
       }
       VoronoiCalculated = true;
     }
-  }
-  else
+  } else
   {    // Part II: Calculate weighted centroids of cells.
     //  float millisBaseline = millis();
     //  println("fps = " + frameRate );
 
     StatusDisplay = "Calculating weighted centroids"; 
-   
+
     temp = cellsCalculated + 500;   // This line: CentroidsPerPass  (Feel free to edit this number.)
     // Higher values give slightly faster computation, but a less responsive GUI.
     // Default value: 500
-    
+
     // Time/frame @ 100: 2.07 @ 50 frames in
     // Time/frame @ 200: 1.575 @ 50
     // Time/frame @ 500: 1.44 @ 50
@@ -992,7 +995,7 @@ void doPhysics()
         if (yt > yMax)
           yMax = yt;
       }
- 
+
 
       float xDiff = xMax - xMin;
       float yDiff = yMax - yMin;
@@ -1045,8 +1048,7 @@ void doPhysics()
               dSum += PicDensity;
             }
           }
-        }  
-      else
+        } else
         for (float x=xMin; x<=xMax; x += StepSize) {
           for (float y=yMin; y<=yMax; y += StepSize) {
 
@@ -1118,6 +1120,48 @@ void doPhysics()
   }
 }
 
+String makeSpiral ( float xOrigin, float yOrigin, float turns, float radius)
+{
+  float resolution = 20.0;
+
+  float AngleStep = (TAU / resolution) ;  
+  float ScaledRadiusPerTurn = radius / (TAU * turns);
+
+  String spiralSVG = "<path d=\"M " + xOrigin + "," + yOrigin + " ";  // Mark center point of spiral
+
+  float x;
+  float y;
+  float angle = 0;
+  
+  int stopPoint = ceil (resolution * turns);
+  int startPoint = floor(resolution / 4);  // Skip the first quarter turn in the spiral, since we have a center point already.
+
+  if (turns > 1.0)  // For small enough circles, skip the fill, and just draw the circle.
+    for (int i = startPoint; i <= stopPoint; i = i+1) {
+      angle = i * AngleStep;
+      x = xOrigin + ScaledRadiusPerTurn * angle * cos(angle);
+      y = yOrigin + ScaledRadiusPerTurn * angle * sin(angle);
+      spiralSVG += x + "," + y + " ";
+    }
+
+  // Last turn is a circle:
+  float CircleRad = ScaledRadiusPerTurn * angle;
+
+  for (int i = 0; i <= resolution; i = i+1) {
+    angle += AngleStep;
+    x = xOrigin + radius * cos(angle);
+    y = yOrigin + radius * sin(angle);
+
+    spiralSVG += x + "," + y + " ";
+  }
+
+
+  spiralSVG += "\" />" ;
+
+  return spiralSVG;
+}
+
+
 
 void draw()
 {
@@ -1163,9 +1207,17 @@ void draw()
 
 
     if (invertImg)
+    {
       stroke(255);
-    else
+      fill (0);
+    } else
+    {
       stroke(0);
+      fill(255);
+    }
+
+    strokeWeight (1);  
+
 
     for ( i = 0; i < particleRouteLength; ++i) {
       // Only show "routed" particles-- those above the white cutoff.
@@ -1179,11 +1231,17 @@ void draw()
       if (invertImg)
         v = 1 - v;
 
-      strokeWeight (MaxDotSize -  v * dotScale);  
-      point(px, py);
+      if (drawSpiral)     
+      {
+        strokeWeight (MaxDotSize -  v * dotScale);  
+        point(px, py);
+      } else
+      {
+        float DotSize =  (MaxDotSize -  v * dotScale);  
+        ellipse(px, py, DotSize, DotSize);
+      }
     }
-  }
-  else
+  } else
   {      // NOT in pause mode.  i.e., just displaying stipples.
     if (cellsCalculated == 0) {
 
@@ -1231,11 +1289,11 @@ void draw()
             //v = 1 - v;
             //strokeWeight (MaxDotSize - v * dotScale);  
             point(px, py);
+            
           }
         }
       }
-    }
-    else {
+    } else {
       // Stipple calculation is still underway
 
       if (TempShowCells)
@@ -1245,13 +1303,16 @@ void draw()
       }
 
 
-      //      stroke(0);   // Stroke color
 
-
-      if (invertImg)
+      if (invertImg) {
         stroke(255);
-      else
+        fill(0);
+      } else {
         stroke(0);
+        fill(255);
+      }
+
+      strokeWeight(1);
 
       for ( i = cellsCalculatedLast; i < cellsCalculated; ++i) {
 
@@ -1267,8 +1328,16 @@ void draw()
             v = 1 - v;
 
           if (v < cutoffScaled) { 
-            strokeWeight (MaxDotSize - v * dotScale);  
-            point(px, py);
+
+            if (drawSpiral)     
+            {
+              strokeWeight (MaxDotSize -  v * dotScale);  
+              point(px, py);
+            } else
+            {
+              float DotSize =  (MaxDotSize -  v * dotScale);  
+              ellipse(px, py, DotSize, DotSize);
+            }
           }
         }
       }
@@ -1304,10 +1373,8 @@ void draw()
     text(ErrorDisplay, TextColumnStart, mainheight + 70);
     if ((millis() - ErrorTime) > 8000)
       ErrorDisp = false;
-  }
-  else
+  } else
     text("Status: " + StatusDisplay, TextColumnStart, mainheight + 70);
-
 
 
   if (SaveNow > 0) {
@@ -1346,8 +1413,7 @@ void draw()
         FileOutput = append(FileOutput, rowTemp);
       } 
       FileOutput = append(FileOutput, "\" />"); // End path description
-    }
-    else {
+    } else {
       println("Save Stipple File (SVG)");
 
       for ( i = 0; i < particleRouteLength; ++i) {
@@ -1367,10 +1433,15 @@ void draw()
         float xTemp = SVGscale*p1.x + xOffset;
         float yTemp = SVGscale*p1.y + yOffset; 
 
-        rowTemp = "<circle cx=\"" + xTemp + "\" cy=\"" + yTemp + "\" r=\"" + dotrad +
-          "\" style=\"fill:none;stroke:black;stroke-width:2;\"/>";
 
-        // Typ:   <circle  cx="1600" cy="450" r="3" style="fill:none;stroke:black;stroke-width:2;"/>
+        if (drawSpiral)
+        {
+          rowTemp =  makeSpiral ( xTemp, yTemp, dotrad / 2.0, dotrad);
+        } else
+        {
+          rowTemp = "<circle cx=\"" + xTemp + "\" cy=\"" + yTemp + "\" r=\"" + dotrad +  "\"/> ";
+        }
+        //Typ:   <circle  cx="1600" cy="450" r="3" />
 
         FileOutput = append(FileOutput, rowTemp);
       }
@@ -1383,7 +1454,7 @@ void draw()
     saveStrings(savePath, FileOutput);
     FileModeTSP = false; // reset for next time
 
-      if (FileModeTSP) 
+    if (FileModeTSP) 
       ErrorDisplay = "TSP Path .SVG file Saved";
     else
       ErrorDisplay = "Stipple .SVG file saved ";
