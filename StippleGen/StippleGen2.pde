@@ -1,94 +1,94 @@
 /**
- 
+
  StippleGen_2_40
- 
+
  SVG Stipple Generator, v. 2.40
  Copyright (C) 2016 by Windell H. Oskay, www.evilmadscientist.com
- 
+
  Full Documentation: http://wiki.evilmadscience.com/StippleGen
  Blog post about the release: http://www.evilmadscientist.com/go/stipple2
- 
+
  An implementation of Weighted Voronoi Stippling:
  http://mrl.nyu.edu/~ajsecord/stipples.html
- 
+
  *******************************************************************************
- 
+
  Change Log:
- 
+
  v 2.4
  * Compiling in Processing 3.0.1
  * Add GUI option to fill circles with a spiral
- 
+
  v 2.3
  * Forked from 2.1.1
  * Fixed saving bug
- 
+
  v 2.20
  * [Cancelled development branch.]
- 
+
  v 2.1.1
  * Faster now, with number of stipples calculated at a time.
- 
+
  v 2.1.0
  * Now compiling in Processing 2.0b6
  * selectInput() and selectOutput() calls modified for Processing 2.
- 
+
  v 2.02
  * Force files to end in .svg
  * Fix bug that gave wrong size to stipple files saved white stipples on black background
- 
- v 2.01:  
+
+ v 2.01:
  * Improved handling of Save process, to prevent accidental "not saving" by users.
- 
- v 2.0:  
+
+ v 2.0:
  * Add tone reversal option (white on black / black on white)
  * Reduce vertical extent of GUI, to reduce likelihood of cropping on small screens
- * Speling corections 
+ * Speling corections
  * Fixed a bug that caused unintended cropping of long, wide images
  * Reorganized GUI controls
  * Fail less disgracefully when a bad image type is selected.
- 
+
  *******************************************************************************
- 
+
  Program is based on the Toxic Libs Library ( http://toxiclibs.org/ )
  & example code:
  http://forum.processing.org/topic/toxiclib-voronoi-example-sketch
- 
+
  Additional inspiration:
  Stipple Cam from Jim Bumgardner
  http://joyofprocessing.com/blog/2011/11/stipple-cam/
- 
- and 
- 
- MeshLibDemo.pde - Demo of Lee Byron's Mesh library, by 
+
+ and
+
+ MeshLibDemo.pde - Demo of Lee Byron's Mesh library, by
  Marius Watz - http://workshop.evolutionzone.com/
- 
+
  Requires ControlP5 library and Toxic Libs library:
  http://www.sojamo.de/libraries/controlP5/
  http://hg.postspectacular.com/toxiclibs/downloads
- 
+
 */
 
-/*  
+/*
  * This is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * http://creativecommons.org/licenses/LGPL/2.1/
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 // You need the controlP5 library from http://www.sojamo.de/libraries/controlP5/
-import controlP5.*;    
+import controlP5.*;
 
 //You need the Toxic Libs library: http://hg.postspectacular.com/toxiclibs/downloads
 import toxi.geom.*;
@@ -96,8 +96,8 @@ import toxi.geom.mesh2d.*;
 import toxi.util.datatypes.*;
 import toxi.processing.*;
 
-import javax.swing.UIManager; 
-import javax.swing.JFileChooser; 
+import javax.swing.UIManager;
+import javax.swing.JFileChooser;
 
 // helper class for rendering
 ToxiclibsSupport gfx;
@@ -113,7 +113,7 @@ int maxParticles = 2000;
 int cellBuffer = 100;
 
 // Display window and GUI area sizes:
-int mainwidth; 
+int mainwidth;
 int mainheight;
 int borderWidth;
 int ctrlheight;
@@ -125,12 +125,12 @@ float lowBorderY;
 float hiBorderY;
 
 float maxDotSize;
-boolean reInitiallizeArray; 
+boolean reInitiallizeArray;
 boolean pausemode;
 boolean fileLoaded;
 boolean saveNow;
 String savePath;
-String[] fileOutput; 
+String[] fileOutput;
 
 boolean fillingCircles;
 
@@ -142,14 +142,14 @@ float errorTime;
 String errorDisplay = "";
 boolean errorDisp = false;
 
-int generation; 
+int generation;
 int particleRouteLength;
-int routeStep; 
+int routeStep;
 
 boolean invertImg;
 boolean fileModeTSP;
 boolean tempShowCells;
-boolean showBG, showPath, showCells; 
+boolean showBG, showPath, showCells;
 
 int vorPointsAdded;
 boolean voronoiCalculated;
@@ -159,11 +159,11 @@ int cellsTotal, cellsCalculated, cellsCalculatedLast;
 int[] particleRoute;
 Vec2D[] particles;
 
-ControlP5 cp5; 
-Voronoi voronoi; 
+ControlP5 cp5;
+Voronoi voronoi;
 Polygon2D regionList[];
 PolygonClipper2D clip;
-PImage img, imgload, imgblur; 
+PImage img, imgload, imgblur;
 
 void LoadImageAndScale() {
   int tempx = 0;
@@ -188,14 +188,14 @@ void LoadImageAndScale() {
 
   if ((imgload.width > mainwidth) || (imgload.height > mainheight)) {
     if (((float)imgload.width / (float)imgload.height) > ((float)mainwidth / (float)mainheight))
-    { 
+    {
       imgload.resize(mainwidth, 0);
-    } else { 
+    } else {
       imgload.resize(0, mainheight);
     }
-  } 
+  }
 
-  if (imgload.height < (mainheight - 2)) { 
+  if (imgload.height < (mainheight - 2)) {
     tempy = (int)((mainheight - imgload.height) / 2) ;
   }
   if (imgload.width < (mainwidth - 2)) {
@@ -205,17 +205,17 @@ void LoadImageAndScale() {
   img.copy(imgload, 0, 0, imgload.width, imgload.height, tempx, tempy, imgload.width, imgload.height);
   // For background image!
 
-  /* 
-   // Optional gamma correction for background image.  
+  /*
+   // Optional gamma correction for background image.
    img.loadPixels();
-   
-   float tempFloat;  
+
+   float tempFloat;
    float GammaValue = 1.0;  // Normally in the range 0.25 - 4.0
-   
+
    for (int i = 0; i < img.pixels.length; i++) {
-   tempFloat = brightness(img.pixels[i])/255;  
-   img.pixels[i] = color(floor(255 * pow(tempFloat,GammaValue))); 
-   } 
+   tempFloat = brightness(img.pixels[i])/255;
+   img.pixels[i] = color(floor(255 * pow(tempFloat,GammaValue)));
+   }
    img.updatePixels();
   */
 
@@ -228,7 +228,7 @@ void LoadImageAndScale() {
   imgblur.loadPixels();
 }
 
-void MainArraySetup() { 
+void MainArraySetup() {
   // Main particle array initialization (to be called whenever necessary):
   LoadImageAndScale();
 
@@ -250,24 +250,24 @@ void MainArraySetup() {
       p =  1 - p;
     }
 
-    if (random(1) >= p ) {  
+    if (random(1) >= p ) {
       Vec2D p1 = new Vec2D(fx, fy);
-      particles[i] = p1;  
+      particles[i] = p1;
       i++;
     }
-  } 
+  }
 
   particleRouteLength = 0;
-  generation = 0; 
+  generation = 0;
   millisLastFrame = millis();
-  routeStep = 0; 
+  routeStep = 0;
   voronoiCalculated = false;
   cellsCalculated = 0;
   vorPointsAdded = 0;
   voronoi = new Voronoi();  // Erase mesh
   tempShowCells = true;
   fileModeTSP = false;
-} 
+}
 
 void setup() {
   borderWidth = 6;
@@ -280,7 +280,7 @@ void setup() {
 
   gfx = new ToxiclibsSupport(this);
 
-  lowBorderX = borderWidth; //mainwidth*0.01; 
+  lowBorderX = borderWidth; //mainwidth*0.01;
   hiBorderX = mainwidth - borderWidth; //mainwidth*0.98;
   lowBorderY = borderWidth; // mainheight*0.01;
   hiBorderY = mainheight - borderWidth; //mainheight*0.98;
@@ -311,11 +311,11 @@ void setup() {
   ControlGroup l3 = cp5.addGroup("Primary controls (Changing will restart)", 10, guiTop, 225);
 
   cp5.addSlider("sliderStipples", 10, 10000, maxParticles, 10, gui2ndRow, 150, 10)
-    .setGroup(l3);    
+    .setGroup(l3);
 
   cp5.addButton("buttonInvertImg", 10, 10, gui2ndRow + guiRowSpacing, 190, 10)
      .setCaptionLabel("Black stipples, White Background")
-     .setGroup(l3); 
+     .setGroup(l3);
 
   cp5.addButton("buttonLoadFile", 10, 10, buttonHeight, 175, 10)
      .setCaptionLabel("LOAD IMAGE FILE (.PNG, .JPG, or .GIF)");
@@ -386,8 +386,8 @@ void fileSelected(File selection) {
 
     String loadPath = selection.getAbsolutePath();
 
-    // If a file was selected, print path to file 
-    println("Loaded file: " + loadPath); 
+    // If a file was selected, print path to file
+    println("Loaded file: " + loadPath);
 
     String[] p = splitTokens(loadPath, ".");
     String ext = p[p.length - 1].toLowerCase();
@@ -398,10 +398,10 @@ void fileSelected(File selection) {
     fileOK = fileOK || ext.equals("tga");
     fileOK = fileOK || ext.equals("png");
 
-    println("File OK: " + fileOK); 
+    println("File OK: " + fileOK);
 
     if (fileOK) {
-      imgload = loadImage(loadPath); 
+      imgload = loadImage(loadPath);
       fileLoaded = true;
       reInitiallizeArray = true;
     } else {
@@ -413,17 +413,17 @@ void fileSelected(File selection) {
   }
 }
 
-void buttonLoadFile(float theValue) {  
+void buttonLoadFile(float theValue) {
   println(":::LOAD JPG, GIF or PNG FILE:::");
   selectInput("Select a file to process:", "fileSelected");  // Opens file chooser
 }
 
-void buttonSavePath(float theValue) {  
+void buttonSavePath(float theValue) {
   fileModeTSP = true;
   saveSvg(0);
 }
 
-void buttonSaveStipples(float theValue) {  
+void buttonSaveStipples(float theValue) {
   fileModeTSP = false;
   saveSvg(0);
 }
@@ -435,15 +435,15 @@ void SavefileSelected(File selection) {
     errorDisplay = "ERROR: NO FILE NAME CHOSEN.";
     errorTime = millis();
     errorDisp = true;
-  } else { 
+  } else {
     savePath = selection.getAbsolutePath();
     String[] p = splitTokens(savePath, ".");
     boolean fileOK = p[p.length - 1].toLowerCase().equals("svg");
     if (!fileOK) savePath = savePath + ".svg";
 
-    // If a file was selected, print path to folder 
+    // If a file was selected, print path to folder
     println("Save file: " + savePath);
-    saveNow = true; 
+    saveNow = true;
     showPath = true;
 
     errorDisplay = "SAVING FILE...";
@@ -452,7 +452,7 @@ void SavefileSelected(File selection) {
   }
 }
 
-void saveSvg(float theValue) {  
+void saveSvg(float theValue) {
   if (!pausemode) {
     buttonPause(0.0);
     errorDisplay = "Error: PAUSE before saving.";
@@ -463,7 +463,7 @@ void saveSvg(float theValue) {
   }
 }
 
-void buttonQuit(float theValue) { 
+void buttonQuit(float theValue) {
   exit();
 }
 
@@ -476,9 +476,9 @@ void buttonOrderOnOff(float theValue) {
     showPath = true;
     orderOnOff.setCaptionLabel("Plotting path >> Shown while paused");
   }
-} 
+}
 
-void buttonCellsOnOff(float theValue) {  
+void buttonCellsOnOff(float theValue) {
   Button cellsOnOff = (Button)cp5.getController("buttonCellsOnOff");
   if (showCells) {
     showCells = false;
@@ -487,9 +487,9 @@ void buttonCellsOnOff(float theValue) {
     showCells = true;
     cellsOnOff.setCaptionLabel("Cells >> Show");
   }
-}  
+}
 
-void buttonImgOnOff(float theValue) {  
+void buttonImgOnOff(float theValue) {
   Button imgOnOffButton = (Button)cp5.getController("buttonImgOnOff");
   if (showBG) {
     showBG = false;
@@ -498,9 +498,9 @@ void buttonImgOnOff(float theValue) {
     showBG = true;
     imgOnOffButton.setCaptionLabel("Image BG >> Show");
   }
-} 
+}
 
-void buttonInvertImg(float theValue) {  
+void buttonInvertImg(float theValue) {
   Slider cutoffSlider = (Slider)cp5.getController("sliderWhiteCutoff");
   Button invertImgButton = (Button)cp5.getController("buttonInvertImg");
   if (invertImg) {
@@ -515,9 +515,9 @@ void buttonInvertImg(float theValue) {
 
   reInitiallizeArray = true;
   pausemode = false;
-} 
+}
 
-void buttonFillCircles(float theValue) {  
+void buttonFillCircles(float theValue) {
   Button fillCircleButton = (Button)cp5.getController("buttonFillCircles");
   if (fillingCircles) {
     fillingCircles = false;
@@ -526,9 +526,9 @@ void buttonFillCircles(float theValue) {
     fillingCircles = true;
     fillCircleButton.setCaptionLabel("Generate Filled circles in output");
   }
-} 
+}
 
-void buttonPause(float theValue) { 
+void buttonPause(float theValue) {
   // Main particle array setup (to be repeated if necessary):
   Button pauseButton = (Button)cp5.getController("buttonPause");
   if (pausemode) {
@@ -541,15 +541,15 @@ void buttonPause(float theValue) {
     pauseButton.setCaptionLabel("Paused (calculating TSP path)");
   }
   routeStep = 0;
-} 
+}
 
 boolean overRect(int x, int y, int width, int height) {
   return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
 }
 
-void sliderStipples(int inValue) { 
+void sliderStipples(int inValue) {
   if (maxParticles != inValue) {
-    println("Update:  Stipple Count -> " + inValue); 
+    println("Update:  Stipple Count -> " + inValue);
     reInitiallizeArray = true;
     pausemode = false;
   }
@@ -557,27 +557,27 @@ void sliderStipples(int inValue) {
 
 void sliderMinDotSize(float inValue) {
   if (minDotSize != inValue) {
-    println("Update: sliderMinDotSize -> " + inValue);  
-    minDotSize = inValue; 
+    println("Update: sliderMinDotSize -> " + inValue);
+    minDotSize = inValue;
     maxDotSize = getMaxDotSize(minDotSize);
   }
-} 
+}
 
-void sliderDotSizeRange(float inValue) {  
+void sliderDotSizeRange(float inValue) {
   if (dotSizeFactor != inValue) {
-    println("Update: Dot Size Range -> " + inValue); 
+    println("Update: Dot Size Range -> " + inValue);
     dotSizeFactor = inValue;
     maxDotSize = getMaxDotSize(minDotSize);
   }
-} 
+}
 
 void sliderWhiteCutoff(float inValue) {
   if (cutoff != inValue) {
-    println("Update: White_Cutoff -> " + inValue); 
-    cutoff = inValue; 
+    println("Update: White_Cutoff -> " + inValue);
+    cutoff = inValue;
     routeStep = 0; // Reset TSP path
   }
-} 
+}
 
 float getMaxDotSize(float minDotSize) {
   return minDotSize * (1 + dotSizeFactor);
@@ -586,13 +586,13 @@ float getMaxDotSize(float minDotSize) {
 void  doBackgrounds() {
   if (showBG) {
     image(img, 0, 0); // Show original (cropped and scaled, but not blurred!) image in background
-  } else { 
+  } else {
     fill(invertImg ? 0 : 255);
     rect(0, 0, mainwidth, mainheight);
   }
 }
 
-void optimizePlotPath() { 
+void optimizePlotPath() {
   int temp;
   // Calculate and show "optimized" plotting path, beneath points.
 
@@ -612,7 +612,7 @@ void optimizePlotPath() {
 
     particleRouteLength = 0;
 
-    boolean particleRouteTemp[] = new boolean[maxParticles]; 
+    boolean particleRouteTemp[] = new boolean[maxParticles];
 
     for (int i = 0; i < maxParticles; ++i) {
       particleRouteTemp[i] = false;
@@ -624,21 +624,21 @@ void optimizePlotPath() {
         continue;
       }
 
-      float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255; 
+      float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255;
 
       if (invertImg) {
         v = 1 - v;
       }
 
       if (v < cutoffScaled) {
-        particleRouteTemp[i] = true;   
+        particleRouteTemp[i] = true;
         particleRouteLength++;
       }
     }
 
-    particleRoute = new int[particleRouteLength]; 
-    int tempCounter = 0;  
-    for (int i = 0; i < maxParticles; ++i) { 
+    particleRoute = new int[particleRouteLength];
+    int tempCounter = 0;
+    for (int i = 0; i < maxParticles; ++i) {
       if (particleRouteTemp[i]) {
         particleRoute[tempCounter] = i;
         tempCounter++;
@@ -647,7 +647,7 @@ void optimizePlotPath() {
     // These are the ONLY points to be drawn in the tour.
   }
 
-  if (routeStep < (particleRouteLength - 2)) { 
+  if (routeStep < (particleRouteLength - 2)) {
     // Nearest neighbor ("Simple, Greedy") algorithm path optimization:
 
     int StopPoint = routeStep + 1000; // 1000 steps per frame displayed; you can edit this number!
@@ -656,12 +656,12 @@ void optimizePlotPath() {
       StopPoint = particleRouteLength - 1;
     }
 
-    for (int i = routeStep; i < StopPoint; ++i) { 
+    for (int i = routeStep; i < StopPoint; ++i) {
       p1 = particles[particleRoute[routeStep]];
-      int ClosestParticle = 0; 
+      int ClosestParticle = 0;
       float  distMin = Float.MAX_VALUE;
 
-      for (int j = routeStep + 1; j < (particleRouteLength - 1); ++j) { 
+      for (int j = routeStep + 1; j < (particleRouteLength - 1); ++j) {
         Vec2D p2 = particles[particleRoute[j]];
 
         float  dx = p1.x - p2.x;
@@ -669,10 +669,10 @@ void optimizePlotPath() {
         float  distance = (float) (dx*dx+dy*dy);  // Only looking for closest; do not need sqrt factor!
 
         if (distance < distMin) {
-          ClosestParticle = j; 
+          ClosestParticle = j;
           distMin = distance;
         }
-      }  
+      }
 
       temp = particleRoute[routeStep + 1];
       // p1 = particles[particleRoute[routeStep + 1]];
@@ -711,10 +711,10 @@ void optimizePlotPath() {
       // Original distance:
       float  dx = a0.x - a1.x;
       float  dy = a0.y - a1.y;
-      float  distance = (float)(dx*dx+dy*dy);  // Only a comparison; do not need sqrt factor! 
+      float  distance = (float)(dx*dx+dy*dy);  // Only a comparison; do not need sqrt factor!
       dx = b0.x - b1.x;
       dy = b0.y - b1.y;
-      distance += (float)(dx*dx+dy*dy);  //  Only a comparison; do not need sqrt factor! 
+      distance += (float)(dx*dx+dy*dy);  //  Only a comparison; do not need sqrt factor!
 
       // Possible shorter distance?
       dx = a0.x - b0.x;
@@ -725,7 +725,7 @@ void optimizePlotPath() {
       distance2 += (float)(dx*dx+dy*dy);  // Only a comparison; do not need sqrt factor! 
 
       if (distance2 < distance) {
-        // Reverse tour between a1 and b0.   
+        // Reverse tour between a1 and b0.
 
         int indexhigh = indexB;
         int indexlow = indexA + 1;
@@ -755,7 +755,7 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
   if (!voronoiCalculated) {
     // Part I: Calculate voronoi cell diagram of the points.
 
-    statusDisplay = "Calculating Voronoi diagram "; 
+    statusDisplay = "Calculating Voronoi diagram ";
 
     // float millisBaseline = millis();  // Baseline for timing studies
     // println("Baseline.  Time = " + (millis() - millisBaseline) );
@@ -766,16 +766,16 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
 
     temp = vorPointsAdded + 500;   // This line: VoronoiPointsPerPass  (Feel free to edit this number.)
     if (temp > maxParticles) {
-      temp = maxParticles; 
+      temp = maxParticles;
     }
 
-    for (int i = vorPointsAdded; i < temp; i++) {  
+    for (int i = vorPointsAdded; i < temp; i++) {
       // Optional, for diagnostics:::
       //  println("particles[i].x, particles[i].y " + particles[i].x + ", " + particles[i].y );
 
       voronoi.addPoint(new Vec2D(particles[i].x, particles[i].y ));
       vorPointsAdded++;
-    }   
+    }
 
     if (vorPointsAdded >= maxParticles) {
       // println("Points added.  Time = " + (millis() - millisBaseline) );
@@ -797,7 +797,7 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
     //  float millisBaseline = millis();
     //  println("fps = " + frameRate );
 
-    statusDisplay = "Calculating weighted centroids"; 
+    statusDisplay = "Calculating weighted centroids";
 
     temp = cellsCalculated + 500;   // This line: CentroidsPerPass  (Feel free to edit this number.)
     // Higher values give slightly faster computation, but a less responsive GUI.
@@ -811,7 +811,7 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
       temp = cellsTotal;
     }
 
-    for (int i=cellsCalculated; i< temp; i++) {  
+    for (int i=cellsCalculated; i< temp; i++) {
       float xMax = 0;
       float xMin = mainwidth;
       float yMax = 0;
@@ -820,7 +820,7 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
 
       Polygon2D region = clip.clipPolygon(regionList[i]);
 
-      for (Vec2D v : region.vertices) { 
+      for (Vec2D v : region.vertices) {
         xt = v.x;
         yt = v.y;
 
@@ -848,10 +848,10 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
       while (maxSize < (cellBuffer / 2)) {
         scaleFactor *= 2;
         maxSize *= 2;
-      }  
+      }
 
       if ((minSize * scaleFactor) > (cellBuffer/2)) {
-        // Special correction for objects of near-unity (square-like) aspect ratio, 
+        // Special correction for objects of near-unity (square-like) aspect ratio,
         // which have larger area *and* where it is less essential to find the exact centroid:
         scaleFactor *= 0.5;
       }
@@ -860,37 +860,37 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
 
       float xSum = 0;
       float ySum = 0;
-      float dSum = 0;       
-      float PicDensity = 1.0; 
+      float dSum = 0;
+      float PicDensity = 1.0;
 
       if (invertImg) {
         for (float x=xMin; x<=xMax; x += StepSize) {
           for (float y=yMin; y<=yMax; y += StepSize) {
             Vec2D p0 = new Vec2D(x, y);
-            if (region.containsPoint(p0)) { 
-              // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur.  
-              PicDensity = 0.001 + (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));  
+            if (region.containsPoint(p0)) {
+              // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur.
+              PicDensity = 0.001 + (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));
 
               xSum += PicDensity * x;
-              ySum += PicDensity * y; 
+              ySum += PicDensity * y;
               dSum += PicDensity;
             }
           }
-        } 
+        }
       } else {
         for (float x=xMin; x<=xMax; x += StepSize) {
           for (float y=yMin; y<=yMax; y += StepSize) {
             Vec2D p0 = new Vec2D(x, y);
             if (region.containsPoint(p0)) {
-              // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur. 
-              PicDensity = 255.001 - (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));  
+              // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur.
+              PicDensity = 255.001 - (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));
 
               xSum += PicDensity * x;
-              ySum += PicDensity * y; 
+              ySum += PicDensity * y;
               dSum += PicDensity;
             }
           }
-        }  
+        }
       }
 
       if (dSum > 0) {
@@ -905,30 +905,30 @@ void doPhysics() {   // Iterative relaxation via weighted Lloyd's algorithm.
 
       if ((xTemp <= lowBorderX) || (xTemp >= hiBorderX) || (yTemp <= lowBorderY) || (yTemp >= hiBorderY)) {
         // If new centroid is computed to be outside the visible region, use the geometric centroid instead.
-        // This will help to prevent runaway points due to numerical artifacts. 
-        centr = region.getCentroid(); 
+        // This will help to prevent runaway points due to numerical artifacts.
+        centr = region.getCentroid();
         xTemp = centr.x;
         yTemp = centr.y;
 
         // Enforce sides, if absolutely necessary:  (Failure to do so *will* cause a crash, eventually.)
 
-        if (xTemp <= lowBorderX) xTemp = lowBorderX + 1; 
-        if (xTemp >= hiBorderX)  xTemp = hiBorderX - 1; 
-        if (yTemp <= lowBorderY) yTemp = lowBorderY + 1; 
+        if (xTemp <= lowBorderX) xTemp = lowBorderX + 1;
+        if (xTemp >= hiBorderX)  xTemp = hiBorderX - 1;
+        if (yTemp <= lowBorderY) yTemp = lowBorderY + 1;
         if (yTemp >= hiBorderY)  yTemp = hiBorderY - 1;
-      }      
+      }
 
       particles[i].x = xTemp;
       particles[i].y = yTemp;
 
       cellsCalculated++;
-    } 
+    }
 
     //  println("cellsCalculated = " + cellsCalculated );
     //  println("cellsTotal = " + cellsTotal );
 
     if (cellsCalculated >= cellsTotal) {
-      voronoiCalculated = false; 
+      voronoiCalculated = false;
       generation++;
       println("Generation = " + generation );
 
@@ -942,14 +942,14 @@ String makeSpiral ( float xOrigin, float yOrigin, float turns, float radius)
 {
   float resolution = 20.0;
 
-  float AngleStep = (TAU / resolution) ;  
+  float AngleStep = TAU / resolution;
   float ScaledRadiusPerTurn = radius / (TAU * turns);
 
-  String spiralSVG = "<path d=\"M " + xOrigin + "," + yOrigin + " ";  // Mark center point of spiral
+  String spiralSVG = "<path d=\"M " + xOrigin + "," + yOrigin + " "; // Mark center point of spiral
 
   float x, y;
   float angle = 0;
-  
+
   int stopPoint = ceil (resolution * turns);
   int startPoint = floor(resolution / 4);  // Skip the first quarter turn in the spiral, since we have a center point already.
 
@@ -984,11 +984,11 @@ void draw() {
   float cutoffScaled = 1 - cutoff;
 
   if (reInitiallizeArray) {
-    maxParticles = (int)cp5.getController("sliderStipples").getValue(); // Only change this here!
-
+    // Only change maxParticles here!
+    maxParticles = (int)cp5.getController("sliderStipples").getValue();
     MainArraySetup();
     reInitiallizeArray = false;
-  } 
+  }
 
   if (pausemode && !voronoiCalculated)  {
     optimizePlotPath();
@@ -1001,11 +1001,11 @@ void draw() {
 
     // Draw paths:
 
-    if ( showPath ) {
-      stroke(128, 128, 255);   // Stroke color (blue)
+    if (showPath) {
+      stroke(128, 128, 255); // Stroke color (blue)
       strokeWeight (1);
 
-      for ( i = 0; i < (particleRouteLength - 1); ++i) {
+      for (i = 0; i < particleRouteLength - 1; ++i) {
         Vec2D p1 = particles[particleRoute[i]];
         Vec2D p2 = particles[particleRoute[i + 1]];
         line(p1.x, p1.y, p2.x, p2.y);
@@ -1014,48 +1014,42 @@ void draw() {
 
     stroke(invertImg ? 255 : 0);
     fill (invertImg ? 0 : 255);
-    strokeWeight(1);  
+    strokeWeight(1);
 
     for ( i = 0; i < particleRouteLength; ++i) {
       // Only show "routed" particles-- those above the white cutoff.
 
-      Vec2D p1 = particles[particleRoute[i]];  
+      Vec2D p1 = particles[particleRoute[i]];
       int px = (int)p1.x;
       int py = (int)p1.y;
 
-      float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255; 
+      float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255;
 
       if (invertImg) v = 1 - v;
 
       if (fillingCircles) {
-        strokeWeight (maxDotSize - v * dotScale);  
+        strokeWeight(maxDotSize - v * dotScale);
         point(px, py);
       } else {
-        float DotSize =  (maxDotSize - v * dotScale);  
-        ellipse(px, py, DotSize, DotSize);
+        float dotSize = maxDotSize - v * dotScale;
+        ellipse(px, py, dotSize, dotSize);
       }
     }
   } else { // NOT in pause mode.  i.e., just displaying stipples.
     if (cellsCalculated == 0) {
       doBackgrounds();
 
-      if (generation == 0) {
-        tempShowCells = true;
-      }
+      tempShowCells = generation == 0;
 
       if (showCells || tempShowCells) {  // Draw voronoi cells, over background.
         strokeWeight(1);
         noFill();
 
-        if (invertImg && !showBG) {
-          stroke(100);
-        } else {
-          stroke(200);
-        }
+        stroke(invertImg && !showBG ? 100 : 200);
 
         i = 0;
         for (Polygon2D poly : voronoi.getRegions()) {
-          //regionList[i++] = poly; 
+          //regionList[i++] = poly;
           gfx.polygon2D(clip.clipPolygon(poly));
         }
       }
@@ -1063,20 +1057,20 @@ void draw() {
       if (showCells) {
         // Show "before and after" centroids, when polygons are shown.
 
-        strokeWeight (minDotSize);  // Normal w/ Min & Max dot size
+        strokeWeight(minDotSize);  // Normal w/ Min & Max dot size
         for ( i = 0; i < maxParticles; ++i) {
 
-          int px = (int) particles[i].x;
-          int py = (int) particles[i].y;
+          int px = (int)particles[i].x;
+          int py = (int)particles[i].y;
 
           if ((px >= imgblur.width) || (py >= imgblur.height) || (px < 0) || (py < 0))
             continue;
-          { 
+          {
             //Uncomment the following four lines, if you wish to display the "before" dots at weighted sizes.
-            //float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;  
+            //float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;
             //if (invertImg)
             //v = 1 - v;
-            //strokeWeight (maxDotSize - v * dotScale);  
+            //strokeWeight (maxDotSize - v * dotScale);
             point(px, py);
           }
         }
@@ -1085,38 +1079,32 @@ void draw() {
       // Stipple calculation is still underway
 
       if (tempShowCells) {
-        doBackgrounds(); 
+        doBackgrounds();
         tempShowCells = false;
       }
 
-      if (invertImg) {
-        stroke(255);
-        fill(0);
-      } else {
-        stroke(0);
-        fill(255);
-      }
-
+      stroke(invertImg ? 255 : 0);
+      fill(invertImg ? 0 : 255);
       strokeWeight(1);
 
-      for ( i = cellsCalculatedLast; i < cellsCalculated; ++i) {
-        int px = (int) particles[i].x;
-        int py = (int) particles[i].y;
+      for (i = cellsCalculatedLast; i < cellsCalculated; ++i) {
+        int px = (int)particles[i].x;
+        int py = (int)particles[i].y;
 
         if ((px >= imgblur.width) || (py >= imgblur.height) || (px < 0) || (py < 0))
           continue;
-        { 
-          float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255; 
+        {
+          float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255;
 
           if (invertImg) v = 1 - v;
 
-          if (v < cutoffScaled) { 
-            if (fillingCircles)     {
-              strokeWeight (maxDotSize - v * dotScale);  
+          if (v < cutoffScaled) {
+            if (fillingCircles) {
+              strokeWeight(maxDotSize - v * dotScale);
               point(px, py);
             } else {
-              float DotSize =  (maxDotSize - v * dotScale);  
-              ellipse(px, py, DotSize, DotSize);
+              float dotSize = maxDotSize - v * dotScale;
+              ellipse(px, py, dotSize, dotSize);
             }
           }
         }
@@ -1127,26 +1115,26 @@ void draw() {
   }
 
   noStroke();
-  fill(100);   // Background fill color
+  fill(100); // Background fill color
   rect(0, mainheight, mainwidth, height); // Control area fill
 
   // Underlay for hyperlink:
   if (overRect(textColumnStart - 10, mainheight + 35, 205, 20) ) {
-    fill(150); 
+    fill(150);
     rect(textColumnStart - 10, mainheight + 35, 205, 20);
   }
 
-  fill(255);   // Text color
+  fill(255); // Text color
 
   text("StippleGen 2      (v. 2.4.0)", textColumnStart, mainheight + 15);
   text("by Evil Mad Scientist Laboratories", textColumnStart, mainheight + 30);
   text("www.evilmadscientist.com/go/stipple2", textColumnStart, mainheight + 50);
 
-  text("Generations completed: " + generation, textColumnStart, mainheight + 85); 
+  text("Generations completed: " + generation, textColumnStart, mainheight + 85);
   text("Time/Frame: " + frameTime + " s", textColumnStart, mainheight + 100);
 
   if (errorDisp) {
-    fill(255, 0, 0);   // Text color
+    fill(255, 0, 0); // Text color
     text(errorDisplay, textColumnStart, mainheight + 70);
     errorDisp = !(millis() - errorTime > 8000);
   } else {
@@ -1157,51 +1145,51 @@ void draw() {
     statusDisplay = "Saving SVG File";
     saveNow = false;
 
-    fileOutput = loadStrings("header.txt"); 
+    fileOutput = loadStrings("header.txt");
 
     String rowTemp;
 
-    float SVGscale = (800.0 / (float) mainheight); 
-    int xOffset = (int) (1600 - (SVGscale * mainwidth / 2));
-    int yOffset = (int) (400 - (SVGscale * mainheight / 2));
+    float SVGscale = (800.0 / (float) mainheight);
+    int xOffset = (int)(1600 - (SVGscale * mainwidth / 2));
+    int yOffset = (int)(400 - (SVGscale * mainheight / 2));
 
     if (fileModeTSP) { // Plot the PATH between the points only.
       println("Save TSP File (SVG)");
 
       // Path header::
-      rowTemp = "<path style=\"fill:none;stroke:black;stroke-width:2px;stroke-linejoin:round;stroke-linecap:round;\" d=\"M "; 
+      rowTemp = "<path style=\"fill:none;stroke:black;stroke-width:2px;stroke-linejoin:round;stroke-linecap:round;\" d=\"M ";
       fileOutput = append(fileOutput, rowTemp);
 
-      for ( i = 0; i < particleRouteLength; ++i) {
-        Vec2D p1 = particles[particleRoute[i]];  
+      for (i = 0; i < particleRouteLength; ++i) {
+        Vec2D p1 = particles[particleRoute[i]];
 
-        float xTemp = SVGscale*p1.x + xOffset;
-        float yTemp = SVGscale*p1.y + yOffset;        
+        float xTemp = SVGscale * p1.x + xOffset;
+        float yTemp = SVGscale * p1.y + yOffset;
 
         rowTemp = xTemp + " " + yTemp + "\r";
         fileOutput = append(fileOutput, rowTemp);
-      } 
+      }
       fileOutput = append(fileOutput, "\" />"); // End path description
     } else {
       println("Save Stipple File (SVG)");
 
-      for ( i = 0; i < particleRouteLength; ++i) {
-        Vec2D p1 = particles[particleRoute[i]]; 
+      for (i = 0; i < particleRouteLength; ++i) {
+        Vec2D p1 = particles[particleRoute[i]];
 
         int px = floor(p1.x);
         int py = floor(p1.y);
 
-        float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;  
+        float v = (brightness(imgblur.pixels[py * imgblur.width + px])) / 255;
 
         if (invertImg) v = 1 - v;
 
-        float dotrad =  (maxDotSize - v * dotScale) / 2; 
+        float dotrad = (maxDotSize - v * dotScale) / 2;
 
-        float xTemp = SVGscale*p1.x + xOffset;
-        float yTemp = SVGscale*p1.y + yOffset; 
+        float xTemp = SVGscale * p1.x + xOffset;
+        float yTemp = SVGscale * p1.y + yOffset;
 
         if (fillingCircles) {
-          rowTemp =  makeSpiral ( xTemp, yTemp, dotrad / 2.0, dotrad);
+          rowTemp = makeSpiral(xTemp, yTemp, dotrad / 2.0, dotrad);
         } else {
           rowTemp = "<circle cx=\"" + xTemp + "\" cy=\"" + yTemp + "\" r=\"" + dotrad +  "\"/> ";
         }
@@ -1225,14 +1213,14 @@ void draw() {
     errorTime = millis();
     errorDisp = true;
   }
-} 
+}
 
 void mousePressed() {
   // rect(textColumnStart, mainheight, 200, 75);
   if (overRect(textColumnStart - 15, mainheight + 35, 205, 20) ) {
     link("http://www.evilmadscientist.com/go/stipple2");
   }
-} 
+}
 
 void keyPressed() {
   if (key == 'x') {   // If this program doesn't run slowly enough for you, 
