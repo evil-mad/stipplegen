@@ -65,7 +65,7 @@
 
  Requires ControlP5 library and Toxic Libs library:
  http://www.sojamo.de/libraries/controlP5/
- http://hg.postspectacular.com/toxiclibs/downloads
+ https://bitbucket.org/postspectacular/toxiclibs/downloads/
 
 */
 
